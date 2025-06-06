@@ -1,0 +1,25 @@
+# Use PHP 8.2 CLI version
+FROM php:8.2-cli
+
+# Install system libraries needed by Symfony
+RUN apt-get update && apt-get install -y \
+    unzip git curl libicu-dev libzip-dev zip libpng-dev libonig-dev libxml2-dev \
+    && docker-php-ext-install intl pdo pdo_mysql zip gd
+
+# Install Composer (PHP dependency manager)
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set working directory inside the container
+WORKDIR /app
+
+# Copy your Symfony app code into the container
+COPY . .
+
+# Install Symfony PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
+
+# Expose port 10000 (Render uses this)
+EXPOSE 10000
+
+# Start Symfony using PHP's built-in server
+CMD ["php", "-S", "0.0.0.0:10000", "-t", "public"]
